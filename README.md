@@ -5,15 +5,15 @@ In this repository you will find instructions on how to build your own image pro
 To get started, make sure you have `git`, a C compiler, and `make` installed. Then run:
 
 ```
-git clone https://github.com/UW-CSE-576-2023SP/Homework
+git clone https://github.com/UW-CSE-455-2024WI/Homework.git
 cd Homework
 make
 ```
 
 and check to see that everything compiles correctly. We recommend using Linux or MacOS for the homework since installing `make` is easier. Linux uses GNU C++ compiler, while MacOS uses XCode C++ compiler. 
 
-## Due Dates
-* **HW1 is due on April 10 (23:59pm).**
+<!-- ## Due Dates
+* **HW1 is due on April 10 (23:59pm).** -->
 
 ## Get started on HW1
 
