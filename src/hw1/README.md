@@ -1,6 +1,6 @@
-# CSE 576 Homework 1 #
+# CSE 455 Homework 1 #
 
-Welcome. For the first assignment we'll just get to know the codebase a little bit and practice manipulating images! You'll be modifying the file `src/hw1/process_image.c`.
+Welcome. For the first assignment, we'll just get to know the codebase a little bit and practice manipulating images! You'll be modifying the file `src/hw1/process_image.c`.
 
 Everytime you make any changes to the code, run the commands:
 
