@@ -238,7 +238,7 @@ which results in:
 
 Now using your sobel filter you can make a cool, stylized one. 
 #### TO DO ####
-Write a function `image colorize_sobel(image im)`. Call `image *sobel_image(image im)`, use the magnitude to specify the saturation and value of an image and the angle (direction) to specify the hue. Then use the `hsv_to_rgb()` function we wrote in Homework 1. Using some smoothing (a Gaussian with sigma 4), the result should look like this:
+Write a function `image colorize_sobel(image im)`. Call `image *sobel_image(image im)`, use the magnitude to specify the saturation and value of an image and the angle (direction) to specify the hue. Then use the `hsv_to_rgb()` function we wrote in Homework 1. The result should look similar to this:
 
 ![](../../figs/lcolorized.png)
 
