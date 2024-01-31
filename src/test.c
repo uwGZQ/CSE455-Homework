@@ -196,7 +196,7 @@ void test_hsv_to_rgb()
     free_image(c);
 }
 
-void test_hw0()
+void test_hw1()
 {
     test_get_pixel();
     test_set_pixel();
@@ -209,7 +209,7 @@ void test_hw0()
     printf("%d tests, %d passed, %d failed\n", tests_total, tests_total-tests_fail, tests_fail);
 }
 
-// HOMEWORK 1
+// HOMEWORK 2
 
 void test_nn_interpolate()
 {
@@ -284,18 +284,6 @@ void test_multiple_resize()
     free_image(im);
     free_image(gt);
 }
-
-void test_hw1()
-{
-    test_nn_interpolate();
-    test_nn_resize();
-    test_bl_interpolate();
-    test_bl_resize();
-    test_multiple_resize();
-    printf("%d tests, %d passed, %d failed\n", tests_total, tests_total-tests_fail, tests_fail);
-}
-
-// HOMEWORK 2
 
 void test_highpass_filter(){
     image im = load_image("data/dog.jpg");
@@ -469,6 +457,11 @@ void test_sobel(){
 
 void test_hw2()
 {
+    test_nn_interpolate();
+    test_nn_resize();
+    test_bl_interpolate();
+    test_bl_resize();
+    test_multiple_resize();
     test_gaussian_filter();
     test_sharpen_filter();
     test_emboss_filter();
