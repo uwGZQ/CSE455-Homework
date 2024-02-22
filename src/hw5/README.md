@@ -32,7 +32,7 @@ The _train.csv_ and _valid.csv_ files define the location and label for each ima
 
 Read the _run_ function in _helper.py_ to understand the logic of training process.
 
-Your code will be tested in Python 3.7 and PyTorch 1.8 under the Linux environment, where the installation steps can be found in the appendix. You should not import any other libraries in your code.
+The installation of python and PyTorch can be found in the appendix. You should not import any other libraries in your code.
 
 
 
@@ -106,7 +106,7 @@ Run `python main.py --model DeepCNN --layers 8 16 32 pool --transform aug`.
 ## Appendix ##
 You can use the following steps to setup Python and PyTorch environment for this assignment:
 
-* Install Python 3.6. If you use conda to manage Python environments, you can use the command: `conda create -n py37 python=3.7`.
+* Install Python 3.8. If you use conda to manage Python environments, you can use the command: `conda create -n py38 python=3.8`.
 * (Optional) Install CUDA if there is a Nvidia GPU in your computer. [Download Link](https://developer.nvidia.com/cuda-downloads).
 * Install PyTorch from its official [website](https://pytorch.org/).
 * Install pandas, numpy, tqdm, Pillow, torchvision, and argparse packages using the command: `pip install pandas  numpy  tqdm  Pillow  torchvision  argparse`.
