@@ -21,6 +21,10 @@ and check to see that everything compiles correctly. We recommend using Linux or
 
 ** HW4 is due on Feburary 20 (11:59 pm).**
 
+** HW5 is due on Feburary 29 (11:59 pm).**
+
+** HW6 is due on March 7 (11:59 pm).**
+
 ## Get started on HW1
 
 Open up the README for homework 1 in src/hw1/README.md, or view it [here](src/hw1/README.md). Good luck and have fun!
