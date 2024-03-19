@@ -15,18 +15,20 @@ void activate_matrix(matrix m, ACTIVATION a)
         for(j = 0; j < m.cols; ++j){
             double x = m.data[i][j];
             if(a == LOGISTIC){
-                // TODO
+                m.data[i][j] = 1. / (1 + exp(-x));
             } else if (a == RELU){
-                // TODO
+                m.data[i][j] = x > 0 ? x : 0;
             } else if (a == LRELU){
-                // TODO
+                m.data[i][j] = x > 0 ? x : 0.1*x;
             } else if (a == SOFTMAX){
-                // TODO
+                m.data[i][j] = exp(x);
             }
             sum += m.data[i][j];
         }
         if (a == SOFTMAX) {
-            // TODO: have to normalize by sum if we are using SOFTMAX
+            for(j = 0; j < m.cols; ++j){
+                m.data[i][j] /= sum;
+            }
         }
     }
 }
@@ -42,7 +44,15 @@ void gradient_matrix(matrix m, ACTIVATION a, matrix d)
     for(i = 0; i < m.rows; ++i){
         for(j = 0; j < m.cols; ++j){
             double x = m.data[i][j];
-            // TODO: multiply the correct element of d by the gradient
+            if(a == LOGISTIC){
+                d.data[i][j] *= x * (1 - x);
+            } else if (a == RELU){
+                d.data[i][j] *= x > 0 ? 1 : 0;
+            } else if (a == LRELU){
+                d.data[i][j] *= x > 0 ? 1 : 0.1;
+            } else if (a == SOFTMAX){
+                d.data[i][j] *= 1;
+            }
         }
     }
 }
@@ -54,15 +64,15 @@ void gradient_matrix(matrix m, ACTIVATION a, matrix d)
 matrix forward_layer(layer *l, matrix in)
 {
 
-    l->in = in;  // Save the input for backpropagation
+    l->in = in;  
 
 
-    // TODO: fix this! multiply input by weights and apply activation function.
-    matrix out = make_matrix(in.rows, l->w.cols);
+    matrix out = matrix_mult_matrix(in, l->w);
+    activate_matrix(out, l->activation);
 
 
-    free_matrix(l->out);// free the old output
-    l->out = out;       // Save the current output for gradient calculation
+    free_matrix(l->out);
+    l->out = out;       
     return out;
 }
 
@@ -74,19 +84,22 @@ matrix backward_layer(layer *l, matrix delta)
 {
     // 1.4.1
     // delta is dL/dy
-    // TODO: modify it in place to be dL/d(xw)
+    gradient_matrix(l->out, l->activation, delta);
 
 
     // 1.4.2
-    // TODO: then calculate dL/dw and save it in l->dw
-    free_matrix(l->dw);
-    matrix dw = make_matrix(l->w.rows, l->w.cols); // replace this
+    free_matrix(l->dw); 
+    matrix transposed_in = transpose_matrix(l->in);
+    matrix dw = matrix_mult_matrix(transposed_in, delta);
     l->dw = dw;
+    free_matrix(transposed_in); 
+
 
     
     // 1.4.3
-    // TODO: finally, calculate dL/dx and return it.
-    matrix dx = make_matrix(l->in.rows, l->in.cols); // replace this
+    matrix transposed_w = transpose_matrix(l->w);
+    matrix dx = matrix_mult_matrix(delta, transposed_w);
+    free_matrix(transposed_w);
 
     return dx;
 }
@@ -98,17 +111,50 @@ matrix backward_layer(layer *l, matrix delta)
 // double decay: value for weight decay
 void update_layer(layer *l, double rate, double momentum, double decay)
 {
-    // TODO:
+    // Assuming l->dw (gradient), l->w (current weights), and l->v (previous update) are initialized.
+
+    // Calculate weight decay term: λw_t
+    matrix weight_decay_term = copy_matrix(l->w);
+    for (int i = 0; i < weight_decay_term.rows; ++i) {
+        for (int j = 0; j < weight_decay_term.cols; ++j) {
+            weight_decay_term.data[i][j] *= decay;
+        }
+    }
+
+    // Calculate momentum term: mΔw_{t-1}
+    matrix momentum_term = copy_matrix(l->v);
+    for (int i = 0; i < momentum_term.rows; ++i) {
+        for (int j = 0; j < momentum_term.cols; ++j) {
+            momentum_term.data[i][j] *= momentum;
+        }
+    }
+
     // Calculate Δw_t = dL/dw_t - λw_t + mΔw_{t-1}
-    // save it to l->v
+    matrix dw_t = copy_matrix(l->dw);
+    for (int i = 0; i < dw_t.rows; ++i) {
+        for (int j = 0; j < dw_t.cols; ++j) {
+            dw_t.data[i][j] -= weight_decay_term.data[i][j];
+            dw_t.data[i][j] += momentum_term.data[i][j];
+        }
+    }
 
+    // Update l->w: w_t = w_t + rate * Δw_t
+    for (int i = 0; i < l->w.rows; ++i) {
+        for (int j = 0; j < l->w.cols; ++j) {
+            l->w.data[i][j] += rate * dw_t.data[i][j];
+        }
+    }
 
-    // Update l->w
+    // Save Δw_t to l->v for the next iteration
+    free_matrix(l->v);
+    l->v = copy_matrix(dw_t);
 
-
-    // Remember to free any intermediate results to avoid memory leaks
-
+    // Free any intermediate results to avoid memory leaks
+    free_matrix(weight_decay_term);
+    free_matrix(momentum_term);
+    free_matrix(dw_t);
 }
+
 
 // Make a new layer for our model
 // int input: number of inputs to the layer
@@ -243,28 +289,61 @@ void train_model(model m, data d, int batch, int iters, double rate, double mome
 
 
 // Questions 
-//
 // 2.1.1 What are the training and test accuracy values you get? Why might we be interested in both training accuracy and testing accuracy? What do these two numbers tell us about our current model?
-// TODO
-//
+// Training : 90.34 %; Test: 90.91 %; We are interested in both training and testing accuracy because we want to know how well our model is performing on the training data and how well it generalizes to unseen data. The training accuracy tells us how well our model is fitting the training data, while the testing accuracy tells us how well our model is generalizing to unseen data. If the training accuracy is high but the testing accuracy is low, it means that our model is overfitting to the training data and not generalizing well to unseen data. If the training accuracy is low, it means that our model is not fitting the training data well and we need to modify the model.
+
 // 2.1.2 Try varying the model parameter for learning rate to different powers of 10 (i.e. 10^1, 10^0, 10^-1, 10^-2, 10^-3) and training the model. What patterns do you see and how does the choice of learning rate affect both the loss during training and the final model accuracy?
-// TODO
-//
+// When the learning rate is too high, the loss during training oscillates and does not converge. When the learning rate is too low, the loss during training decreases very slowly and does not converge. The best learning rate is 10^-1, which converges quickly and has the lowest loss during training. The final model accuracy is highest (Test: 91.71 %; Training: 92.07 %) when the learning rate is 10^-1. 
+
 // 2.1.3 Try varying the parameter for weight decay to different powers of 10: (10^0, 10^-1, 10^-2, 10^-3, 10^-4, 10^-5). How does weight decay affect the final model training and test accuracy?
-// TODO
-//
+// The weight decay parameter slightly affects the final model training and test accuracy. The best weight decay parameter is 10^-4, which has the highest test accuracy (Test: 91.71 %; Training: 92.07 %). Theoretically, weight decay helps to prevent overfitting by penalizing large weights. It helps to reduce the variance in the model and improve the generalization to unseen data.
+
+
 // 2.2.1 Currently the model uses a logistic activation for the first layer. Try using a the different activation functions we programmed. How well do they perform? What's best?
-// TODO
-//
+// In this experiment, the learning rate and weight decay were set to 0.1 and 0.0001 respectively.
+// Logistic: Test: 94.45%, Training: 94.49%.
+// Relu: Test: 94.33%, Training: 94.92%.
+// LRELU: Test: 94.56%, Training: 94.99%.
+
+// The best activation function is the LRELU activation function, which has the highest test accuracy. 
+
 // 2.2.2 Using the same activation, find the best (power of 10) learning rate for your model. What is the training accuracy and testing accuracy?
-// TODO
-//
+// In this experiment, I use LRELU as the activation function and set the decay to 0.
+// The best learning rate is 10^-1, which has the highest test accuracy (Test: 94.58 %; Training: 95.13 %).
+
 // 2.2.3 Right now the regularization parameter `decay` is set to 0. Try adding some decay to your model. What happens, does it help? Why or why not may this be?
-// TODO
-//
+// The best weight decay parameter is 10^-3, which has the highest test accuracy (Test: 94.90 %; Training: 95.27 %). Weight decay helps to prevent overfitting by penalizing large weights. It helps to reduce the variance in the model and improve the generalization to unseen data.
+
 // 2.2.4 Modify your model so it has 3 layers instead of two. The layers should be `inputs -> 64`, `64 -> 32`, and `32 -> outputs`. Also modify your model to train for 3000 iterations instead of 1000. Look at the training and testing error for different values of decay (powers of 10, 10^-4 -> 10^0). Which is best? Why?
-// TODO
-//
+// More layers and more iterations allow the model to learn more complex patterns in the data. The best weight decay parameter is 10^-3,  which has the highest test accuracy (Test: 97.11 %; Training: 98.31 %). 
+
 // 3.1.1 What is the best training accuracy and testing accuracy? Summarize all the hyperparameter combinations you tried.
-// TODO
-//
+// In this experiment, I use 3-layer model (inputs -> 64 -> 32 -> outputs) with 3000 iterations and LRELU as the activation function. Hyperparameter combinations and results:
+
+
+
+// lr=0.1, decay=0, Train Acc: 40.30%, Test Acc: 38.62%
+// lr=0.1, decay=0.01, Train Acc: 36.90%, Test Acc: 35.61%
+// lr=0.1, decay=0.001, Train Acc: 40.56%, Test Acc: 39.30%
+// lr=0.1, decay=0.0001, Train Acc: 40.61%, Test Acc: 39.14%
+
+// lr=0.01, decay=0, Train Acc: 46.29%, Test Acc: 44.77%
+// lr=0.01, decay=0.01, Train Acc: 47.24%, Test Acc: 45.56%
+// lr=0.01, decay=0.001, Train Acc: 47.08%, Test Acc: 45.21%
+// lr=0.01, decay=0.0001, Train Acc: 46.88%, Test Acc: 44.63%
+
+
+// lr=0.001, decay=0, Train Acc: 39.88%, Test Acc: 39.67%
+// lr=0.001, decay=0.01, Train Acc: 39.94%, Test Acc: 39.73%
+// lr=0.001, decay=0.001, Train Acc: 39.86%, Test Acc: 39.77%
+// lr=0.001, decay=0.0001, Train Acc: 39.81%, Test Acc: 39.79%
+
+// lr=0.0001, decay=0, Train Acc: 28.14%, Test Acc: 28.40%
+// lr=0.0001, decay=0.01, Train Acc: 26.95%, Test Acc: 26.31%
+// lr=0.0001, decay=0.001, Train Acc: 26.94%, Test Acc: 26.30%
+// lr=0.0001, decay=0.0001, Train Acc: 28.12%, Test Acc: 28.37%
+
+// Best Test Accuracy: 45.56% with parameters {'rate': 0.01, 'decay': 0.01}
+
+
+
